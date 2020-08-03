@@ -9,6 +9,7 @@ export default class node extends Component{
         className={`node ${extraclassName}`}
         onMouseDown={() => this.props.onMouseDown(this.props.row, this.props.col)}
         onMouseEnter={() => this.props.onMouseEnter(this.props.row, this.props.col)}
+        onMouseOut={() => this.props.onMouseOut(this.props.row, this.props.col)}
         onMouseUp={() => this.props.onMouseUp(this.props.row, this.props.col)}
         />
     }

@@ -1,10 +1,7 @@
 .grid{
     margin: auto;
+    margin-top: 25px;
     border-spacing: 0;
-}
-.navbar{
-    display:flex;
-    align-items: center;
-    justify-content: flex-start;
-    height: 6vh;
+    vertical-align: middle;
+    
 }

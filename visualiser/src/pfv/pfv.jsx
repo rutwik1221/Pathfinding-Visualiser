@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import Node from "./Node/Node"
-import Nav from "./Navbar" 
 import "./pfv.css";
 import {dijkstra} from"../algorithms/dijkstra.js"
 import {astar} from"../algorithms/astar.js"
@@ -8,14 +7,16 @@ import {BreadthFirstSearch,DepthFirstSearch} from "../algorithms/BreadthFirstSea
 
 export default class PFV extends Component{
     static defaultProps = {
-        nrows:20,
-        ncols:50,
+        nrows:30,
+        ncols:75,
     }
     constructor(props){
         super(props);
         this.state={
             grid: [],
             isMouseDown : false,
+            movingStart : false,
+            movingEnd   : false,
             algo:"Dijkstra's",
             START_NODE_ROW : this.props.nrows/2,
             START_NODE_COL : Math.floor(this.props.ncols/4),
@@ -106,44 +107,84 @@ export default class PFV extends Component{
         newgrid[node.row][node.col]=newnode;
         this.setState({grid:newgrid});
     }
+    toggleStart(row, col){
+        const newgrid = this.state.grid;
+        const node = newgrid[row][col];
+        const newnode = {
+            ...node,
+            isStart:!node.isStart,
+        }
+        newgrid[node.row][node.col]=newnode;
+        this.setState({
+            grid:newgrid,
+            START_NODE_ROW : row,
+            START_NODE_COL : col,
+        });
+    }
+    toggleEnd(row, col){
+        const newgrid = this.state.grid;
+        const node = newgrid[row][col];
+        const newnode = {
+            ...node,
+            isEnd:!node.isEnd,
+        }
+        newgrid[node.row][node.col]=newnode;
+        this.setState({
+            grid:newgrid,
+            END_NODE_ROW : row,
+            END_NODE_COL : col,
+        });
+    }
     handleMouseDown(row, col) {
-        if(!this.state.isMouseDown)
+        if(this.state.grid[row][col].isStart==true){
+            this.setState({movingStart:true});
+        }
+        else if(this.state.grid[row][col].isEnd==true){
+            this.setState({movingEnd:true});
+        }
+        else if(!this.state.isMouseDown){
             this.setState({isMouseDown:true});
-        this.toggleWall(row, col);
+            this.toggleWall(row, col);
+        }
     }
     handleMouseEnter(row, col) {
-        if(this.state.isMouseDown)
+        if(this.state.movingStart){
+            this.toggleStart(row, col);
+        }
+        else if(this.state.movingEnd){
+            this.toggleEnd(row, col);
+        }
+        else if(this.state.isMouseDown)
             this.toggleWall(row, col);
+        
+    }
+    handleMouseOut(row, col) {
+        if(this.state.movingStart){
+            this.toggleStart(row, col);
+        }
+        else if(this.state.movingEnd){
+            this.toggleEnd(row, col);
+        }   
     }
     handleMouseUp(){
         this.setState({isMouseDown:false});
+        this.setState({movingEnd:false});
+        this.setState({movingStart:false});
     }     
     render(){
         const {grid} = this.state;
         return(
             <>
-                <nav className="navbar navbar-expand-lg navbar-light bg-light">
+                <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                     <a 
                         href="#" 
                         className="navbar-brand"
                     > 
                         Pathfinding Visualiser
                     </a>
-                    <button 
-                        className="btn btn-success" 
-                        onClick={this.visualize}
-                    >
-                        Visualize {this.state.algo} Algorithm
-                    </button>
-                    <button 
-                        className="btn btn-secondary" 
-                        onClick={this.clearVisited}
-                    >
-                        Refresh
-                    </button>
-                    <li className="nav-item dropdown">
+                    <span className="nav-item dropdown rounded" style={{color:"#ffffff"}}>
                         <span className="nav-link dropdown-toggle"  id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            {this.state.algo}
+                            Algorithms
                         </span>
                         <div className="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <span className="dropdown-item" onClick={()=>this.setState({algo:"Dijkstra's"})}>Dijkstra's Algorithm</span>
@@ -151,13 +192,30 @@ export default class PFV extends Component{
                             <span className="dropdown-item" onClick={()=>this.setState({algo:"BreadthFirstSearch"})}>BreadthFirstSearch Algorithm</span>
                             <span className="dropdown-item" onClick={()=>this.setState({algo:"DepthFirstSearch"})}>DepthFirstSearch Algorithm</span>
                         </div>
-                    </li>
+                    </span>
+                    <button 
+                        className="btn "
+                        style={{color:"#ffffff"}}
+                        onClick={this.visualize}
+                    >
+                        Visualize {this.state.algo} Algorithm
+                    </button>
+                    <button 
+                        className="btn"
+                        style={{color:"#ffffff"}} 
+                        onClick={this.clearVisited}
+                    >
+                        Refresh
+                    </button>                    
                 </nav>
-                <table className="grid">
+                <div className = "text-center font-weight-bold" style={{height:"7vh",fontSize:"1.5rem"}}>
+                    Pick an algorithm and visualise it!
+                </div>
+                <table className="grid align-middle">
                     <tbody>
                     {grid.map((row,rowIdx)=>{
                         return (
-                            <tr className='row' key ={rowIdx} >
+                            <tr className='row flex-row' key ={rowIdx} >
                                 {row.map((node,nodeIdx)=>{
                                     return (
                                         <Node
@@ -165,6 +223,7 @@ export default class PFV extends Component{
                                             {...node}
                                             onMouseDown={(row, col) => this.handleMouseDown(row, col)}
                                             onMouseEnter={(row, col) => this.handleMouseEnter(row, col)}
+                                            onMouseOut={(row, col) => this.handleMouseOut(row, col)}
                                             onMouseUp={() => this.handleMouseUp()}
                                         />
                                     );
@@ -218,3 +277,26 @@ function animatePath(path) {
       }, 50 * i);
     }
 }
+function randomMaze(grid){
+    console.log("HEllo")
+    let newGrid=grid;
+    for(let row of newGrid){
+        for(let node of row){
+            node.isWall=false;
+            if(!(node.isStart||node.isEnd)){
+                node.isWall = (Math.random()>0.6);
+            }
+        }
+    }
+    console.log(newGrid)
+    return newGrid
+}
+/*
+<button 
+                        className="btn"
+                        style={{color:"#ffffff"}} 
+                        onClick={() => this.setState({grid:randomMaze(grid)})}
+                    >
+                        Gen
+                    </button>
+*/
