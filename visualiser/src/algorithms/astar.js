@@ -18,10 +18,8 @@ export function astar(grid, start, end) {
 		let current = min(fCost,hCost);
 		visitOrder.push(current);
 		openSet.delete(current);
-		gCost.delete(current);
-		hCost.delete(current);
-		fCost.delete(current);
 		closedSet.add(current);
+
     	if(current===end){
         	return {
 				visitedOrder:visitOrder,
@@ -31,18 +29,35 @@ export function astar(grid, start, end) {
 		let neighbours = getNeighbours(current,grid);
 		for(let node of neighbours){
 			if(!closedSet.has(node)){
-				if(!openSet.has(node)){
+				/*if(!openSet.has(node)){
 					gCost.set(node,setgCost(node,start));
 					hCost.set(node,sethCost(node,end));
-					fCost.set(node, gCost.get(node) + hCost.get(node) );
+					fCost.set(node, gCost.get(node) + hCost.get(node));
 					prev.set(node,current);
-					if(!openSet.has(node)){
+					if(!openSet.has(node))
 						openSet.add(node);
-					}
+				}*/
+				var gScore = gCost.get(current)+1;
+				var gBest=false;
+				if(!openSet.has(node)){
+					gBest=true;
+					hCost.set(node,sethCost(node,end));
+					openSet.add(node);
+				}
+				else if(gCost.has(node) && gScore<gCost.get(node)){
+					gBest=true;
+				}
+
+				if(gBest){
+					prev.set(node,current);
+					gCost.set(node,gScore);
+					fCost.set(node,gCost.get(node)+hCost.get(node));
 				}
 			}
 		}
+		fCost.delete(current);
 	}
+	console.log(prev);
 	function path(node){
 		let path=[];
 		while(prev.has(node)){
@@ -56,7 +71,6 @@ export function astar(grid, start, end) {
 		path:path(end),
 	};
 }
-
 function setgCost(node,start){
 	return manhattanDistance(node,start);
 }
@@ -69,7 +83,7 @@ function min(fCost,hCost){
 	for(let [key,value] of fCost){
     	if(value<minVal){
         	minVal=value;
-        	minKey=key
+        	minKey=key;
 		}
 	}
 	for(let [key,value] of fCost){
@@ -79,7 +93,7 @@ function min(fCost,hCost){
 	}
 	minVal=Infinity;
 	for(let i=0;i<d.length;d++){
-		if(hCost.get(d[i])<minVal){
+		if(hCost.get(d[i])>minVal){
 			minKey=d[i];
 			minVal=hCost.get(d[i]);
 		}
