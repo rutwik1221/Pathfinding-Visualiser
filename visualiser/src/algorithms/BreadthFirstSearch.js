@@ -3,6 +3,7 @@ export function BreadthFirstSearch(grid,startNode,endNode){
     let unvisitedNodes=[];
     startNode.isVisited=true;
     unvisitedNodes.push(startNode);
+
     while(unvisitedNodes.length>0){
         let currentNode = unvisitedNodes.shift();
         console.log(currentNode);
@@ -14,7 +15,8 @@ export function BreadthFirstSearch(grid,startNode,endNode){
 			};
         }
         currentNode.isVisited=true;
-        unvisitedNodes.push(...getUnvisitedNeighbours(currentNode,grid));     
+        unvisitedNodes.push(...getUnvisitedNeighbours(currentNode,grid));
+        console.log("Current node:"+currentNode);     
     }
 }
 export function DepthFirstSearch(grid,startNode,endNode){

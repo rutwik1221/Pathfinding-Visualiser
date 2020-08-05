@@ -4,7 +4,7 @@ export function astar(grid, start, end) {
 	}
 	let visitOrder=[];
 	let openSet= new Set();
-		openSet.add(start);
+	openSet.add(start);
 	let closedSet = new Set();
 	let gCost = new Map();
 	let hCost = new Map();

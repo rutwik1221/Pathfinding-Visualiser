@@ -3,12 +3,12 @@ import Node from "./Node/Node"
 import "./pfv.css";
 import {dijkstra} from"../algorithms/dijkstra.js"
 import {astar} from"../algorithms/astar.js"
-import {BreadthFirstSearch,DepthFirstSearch} from "../algorithms/BreadthFirstSearch"
+///import {BreadthFirstSearch,DepthFirstSearch} from "../algorithms/BreadthFirstSearch"
 
 export default class PFV extends Component{
     static defaultProps = {
-        nrows:30,
-        ncols:75,
+        nrows:Math.floor(0.80*window.innerHeight/25),
+        ncols:Math.floor(0.9*window.innerWidth/25),
     }
     constructor(props){
         super(props);
@@ -24,7 +24,8 @@ export default class PFV extends Component{
             END_NODE_COL : Math.floor(3*this.props.ncols/4),
         };
         this.visualize=this.visualize.bind(this);
-        this.clearVisited=this.clearVisited.bind(this);
+        this.clearGrid=this.clearGrid.bind(this);
+        this.clearWalls=this.clearWalls.bind(this);
     }
     
     componentDidMount(){
@@ -54,29 +55,42 @@ export default class PFV extends Component{
         }
         return grid;
     }
-    clearVisited(){
+    clearGrid(){
         const {grid}=this.state;
         for(let row=0;row<this.props.nrows;row++){
             for(let col=0;col<this.props.ncols;col++){
                 if(!grid[row][col].isWall){
                     if(grid[row][col].isStart){
-                        document.getElementById(`${row}-${col}`).className ='node-start';
+                        document.getElementById(`${row}-${col}`).className ='node node-start';
                     }
                     else if(grid[row][col].isEnd){
-                        document.getElementById(`${row}-${col}`).className ='node-end';
+                        document.getElementById(`${row}-${col}`).className ='node node-end';
                     }
                     else{ 
                         document.getElementById(`${row}-${col}`).className ='node';
                     }
+                }
+                else{
+                    document.getElementById(`${row}-${col}`).className ='node node-wall';
                 }
                 grid[row][col].isVisited=false;
             }
         }
         this.setState({grid:grid});
     }
-
+    clearWalls(){
+        const {grid}=this.state;
+        for(let row=0;row<this.props.nrows;row++){
+            for(let col=0;col<this.props.ncols;col++){
+                if(grid[row][col].isWall){
+                    grid[row][col].isWall=false;
+                }
+            }
+        }
+        this.setState({grid:grid});
+    }
     visualize(){
-        this.clearVisited();
+        this.clearGrid();
         const {grid} = this.state;
         const startNode = grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
         const endNode = grid[this.state.END_NODE_ROW][this.state.END_NODE_COL];
@@ -88,12 +102,12 @@ export default class PFV extends Component{
         else if(this.state.algo === "A*"){
             result = astar(grid, startNode, endNode);
         }
-        else if(this.state.algo === "BreadthFirstSearch"){
+        /*else if(this.state.algo === "BreadthFirstSearch"){
             result = BreadthFirstSearch(grid, startNode, endNode);
         }
         else if(this.state.algo === "DepthFirstSearch"){
             result = DepthFirstSearch(grid, startNode, endNode);
-        }
+        }*/
         animateVisitOrder(result.visitedOrder,result.path);
     }
 
@@ -136,10 +150,10 @@ export default class PFV extends Component{
         });
     }
     handleMouseDown(row, col) {
-        if(this.state.grid[row][col].isStart==true){
+        if(this.state.grid[row][col].isStart===true){
             this.setState({movingStart:true});
         }
-        else if(this.state.grid[row][col].isEnd==true){
+        else if(this.state.grid[row][col].isEnd===true){
             this.setState({movingEnd:true});
         }
         else if(!this.state.isMouseDown){
@@ -174,10 +188,10 @@ export default class PFV extends Component{
     render(){
         const {grid} = this.state;
         return(
-            <>
+            <div>
                 <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                     <a 
-                        href="#" 
+                        href="/" 
                         className="navbar-brand"
                     > 
                         Pathfinding Visualiser
@@ -189,8 +203,6 @@ export default class PFV extends Component{
                         <div className="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                             <span className="dropdown-item" onClick={()=>this.setState({algo:"Dijkstra's"})}>Dijkstra's Algorithm</span>
                             <span className="dropdown-item" onClick={()=>this.setState({algo:"A*"})}>A* Algorithm</span>
-                            <span className="dropdown-item" onClick={()=>this.setState({algo:"BreadthFirstSearch"})}>BreadthFirstSearch Algorithm</span>
-                            <span className="dropdown-item" onClick={()=>this.setState({algo:"DepthFirstSearch"})}>DepthFirstSearch Algorithm</span>
                         </div>
                     </span>
                     <button 
@@ -203,15 +215,15 @@ export default class PFV extends Component{
                     <button 
                         className="btn"
                         style={{color:"#ffffff"}} 
-                        onClick={this.clearVisited}
+                        onClick={this.clearWalls}
                     >
-                        Refresh
+                        Clear Walls
                     </button>                    
                 </nav>
                 <div className = "text-center font-weight-bold" style={{height:"7vh",fontSize:"1.5rem"}}>
                     Pick an algorithm and visualise it!
                 </div>
-                <table className="grid align-middle">
+                <table className="grid align-middle" >
                     <tbody>
                     {grid.map((row,rowIdx)=>{
                         return (
@@ -233,7 +245,7 @@ export default class PFV extends Component{
                     })}
                     </tbody>
                 </table>
-            </>
+            </div>
         );
     }
 }
