@@ -29,14 +29,6 @@ export function astar(grid, start, end) {
 		let neighbours = getNeighbours(current,grid);
 		for(let node of neighbours){
 			if(!closedSet.has(node)){
-				/*if(!openSet.has(node)){
-					gCost.set(node,setgCost(node,start));
-					hCost.set(node,sethCost(node,end));
-					fCost.set(node, gCost.get(node) + hCost.get(node));
-					prev.set(node,current);
-					if(!openSet.has(node))
-						openSet.add(node);
-				}*/
 				var gScore = gCost.get(current)+1;
 				var gBest=false;
 				if(!openSet.has(node)){
@@ -57,17 +49,17 @@ export function astar(grid, start, end) {
 		}
 		fCost.delete(current);
 	}
-	console.log(prev);
 	function path(node){
 		let path=[];
 		while(prev.has(node)){
 			path.push(node);
 			node=prev.get(node);
 		}
+		path.push(start);
 		return path;
 	}
 	return {
-		visitOrder:visitOrder,
+		visitOrder:"hi",
 		path:path(end),
 	};
 }

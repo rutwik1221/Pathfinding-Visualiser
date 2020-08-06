@@ -5,6 +5,10 @@
     padding: 0;
   }
   
+ .end-svg{
+   position: absolute;
+
+ }
   .node-end {
     background-color: red;
   }
@@ -12,7 +16,6 @@
   .node-start {
     background-color: green;
   }
-  
   .node-visited {
     animation-name: visitedAnimation;
     animation-duration: 1.5s;
@@ -23,7 +26,9 @@
     animation-fill-mode: forwards;
     animation-play-state: running;
   }
-  
+  .node-visited-quick{
+    background-color: rgba(0, 190, 218, 0.75);
+  }
   @keyframes visitedAnimation {
     0% {
       transform: scale(0.3);
@@ -60,7 +65,9 @@
     animation-fill-mode: forwards;
     animation-play-state: running;
   }
-  
+  .node-shortest-path-quick{
+    background-color: rgb(255, 254, 106);
+  }
   @keyframes shortestPath {
     0% {
       transform: scale(0.6);

@@ -18,9 +18,10 @@ export default class PFV extends Component{
             movingStart : false,
             movingEnd   : false,
             algo:"Dijkstra's",
-            START_NODE_ROW : this.props.nrows/2,
+            done:false,
+            START_NODE_ROW : Math.floor(this.props.nrows/2),
             START_NODE_COL : Math.floor(this.props.ncols/4),
-            END_NODE_ROW : this.props.nrows/2,
+            END_NODE_ROW : Math.floor(this.props.nrows/2),
             END_NODE_COL : Math.floor(3*this.props.ncols/4),
         };
         this.visualize=this.visualize.bind(this);
@@ -33,18 +34,21 @@ export default class PFV extends Component{
         this.setState({grid});
     }
     createNode(col,row){
+        let is= row === this.state.START_NODE_ROW && col===  this.state.START_NODE_COL;
+        let ie = row === this.state.END_NODE_ROW   && col === this.state.END_NODE_COL;
         return{
             col,
             row,
-            isStart:row === this.state.START_NODE_ROW && col===  this.state.START_NODE_COL,
-            isEnd:  row === this.state.END_NODE_ROW   && col === this.state.END_NODE_COL,
+            isStart:is,
+            isEnd:  ie,
             distance: Infinity,
             isVisited: false,
             isWall: false,
-            previousNode: null,
+            previousNode: null,            
         };
     }
     getGrid() {
+        alert("Instructions! \nDrag the cursor to create walls, then pick an algorithm to visualise.\nDrag the nodes to reposition them.");
         const grid = [];
         for(let row=0;row<this.props.nrows;row++){
             const currentRow = [];
@@ -97,18 +101,38 @@ export default class PFV extends Component{
         let result;
         if(this.state.algo === "Dijkstra's"){
             result = dijkstra(grid, startNode, endNode);
-
         }
         else if(this.state.algo === "A*"){
             result = astar(grid, startNode, endNode);
         }
-        /*else if(this.state.algo === "BreadthFirstSearch"){
-            result = BreadthFirstSearch(grid, startNode, endNode);
+        console.log(result.visitedOrder)
+        console.log(result.path)
+        if(result.path.length>1)
+            animateVisitOrder(result.visitedOrder,result.path);
+        else{
+            alert("No path exits!");
         }
-        else if(this.state.algo === "DepthFirstSearch"){
-            result = DepthFirstSearch(grid, startNode, endNode);
-        }*/
-        animateVisitOrder(result.visitedOrder,result.path);
+        this.setState({done:true})
+    }
+    async quickVisualize(){
+        if(!this.state.done)
+            return;
+        this.clearGrid();
+        const {grid} = this.state;
+        const startNode = grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
+        const endNode = grid[this.state.END_NODE_ROW][this.state.END_NODE_COL];
+        let result;
+        if(this.state.algo === "Dijkstra's"){
+            result = dijkstra(grid, startNode, endNode);
+        }
+        else if(this.state.algo === "A*"){
+            result = astar(grid, startNode, endNode);
+        }
+        if(result.path.length>1)
+            quickAnimateVisitOrder(result.visitedOrder,result.path);
+        else{
+            alert("No path exits!");
+        }
     }
 
     toggleWall(row, col){
@@ -127,6 +151,7 @@ export default class PFV extends Component{
         const newnode = {
             ...node,
             isStart:!node.isStart,
+            isWall:false,
         }
         newgrid[node.row][node.col]=newnode;
         this.setState({
@@ -141,6 +166,7 @@ export default class PFV extends Component{
         const newnode = {
             ...node,
             isEnd:!node.isEnd,
+            isWall:false,
         }
         newgrid[node.row][node.col]=newnode;
         this.setState({
@@ -148,6 +174,7 @@ export default class PFV extends Component{
             END_NODE_ROW : row,
             END_NODE_COL : col,
         });
+        
     }
     handleMouseDown(row, col) {
         if(this.state.grid[row][col].isStart===true){
@@ -164,13 +191,14 @@ export default class PFV extends Component{
     handleMouseEnter(row, col) {
         if(this.state.movingStart){
             this.toggleStart(row, col);
+
         }
         else if(this.state.movingEnd){
             this.toggleEnd(row, col);
+
         }
         else if(this.state.isMouseDown)
             this.toggleWall(row, col);
-        
     }
     handleMouseOut(row, col) {
         if(this.state.movingStart){
@@ -180,7 +208,13 @@ export default class PFV extends Component{
             this.toggleEnd(row, col);
         }   
     }
-    handleMouseUp(){
+    async handleMouseUp(){
+        if(this.state.movingEnd){
+            await this.quickVisualize();
+        }
+        if(this.state.movingStart){
+            await this.quickVisualize();
+        }
         this.setState({isMouseDown:false});
         this.setState({movingEnd:false});
         this.setState({movingStart:false});
@@ -250,22 +284,6 @@ export default class PFV extends Component{
     }
 }
 
-
-/*function createNode(col,row){
-    return{
-        col,
-        row,
-        isStart:row === START_NODE_ROW && col===START_NODE_COL,
-        isEnd: row === END_NODE_ROW && col === END_NODE_COL,
-        distance: Infinity,
-        totalDistance:Infinity,
-        heuristicDistance:null,
-        direction:null,
-        isVisited: false,
-        isWall: false,
-        previousNode: null,
-    };
-}*/
 function animateVisitOrder(visitedOrder, path) {
     for (let i = 0; i <= visitedOrder.length; i++) {
       if (i === visitedOrder.length) {
@@ -289,6 +307,29 @@ function animatePath(path) {
       }, 50 * i);
     }
 }
+function quickAnimateVisitOrder(visitedOrder, path) {
+    for (let i = 0; i <= visitedOrder.length; i++) {
+      if (i === visitedOrder.length) {
+        setTimeout(() => {
+            quickAnimatePath(path);
+        }, 0 * i);
+        return;
+      }
+      setTimeout(() => {
+        const node = visitedOrder[i];
+        document.getElementById(`${node.row}-${node.col}`).className ='node node-visited-quick';
+      }, 0 * i);
+    }
+}
+function quickAnimatePath(path) {
+    for (let i = 0; i < path.length; i++) {
+      setTimeout(() => {
+        const node = path[i];
+        document.getElementById(`${node.row}-${node.col}`).className =
+          'node node-shortest-path-quick';
+      }, 0 * i);
+    }
+}
 function randomMaze(grid){
     console.log("HEllo")
     let newGrid=grid;
@@ -303,12 +344,3 @@ function randomMaze(grid){
     console.log(newGrid)
     return newGrid
 }
-/*
-<button 
-                        className="btn"
-                        style={{color:"#ffffff"}} 
-                        onClick={() => this.setState({grid:randomMaze(grid)})}
-                    >
-                        Gen
-                    </button>
-*/
